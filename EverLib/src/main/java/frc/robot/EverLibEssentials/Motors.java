@@ -16,7 +16,7 @@ public class Motors {
     // a list of files to record to
     private static final List<File> FILES = new ArrayList<File>();
     // a file containing the settings for the recording
-    private static final File SETTINGS_FILE = new File("settings.txt");
+    private static final File SETTINGS_FILE = new File("/home/lvuser/settings.txt");
     // the number of iterations recorded
     private static int m_iterations = 0;
     // a boolean saying wether or not to record
@@ -26,7 +26,7 @@ public class Motors {
     public static int AddMotor(MotorController motor){
         MOTORS.add(motor);
         SPEEDS.add(0.0);
-        FILES.add(new File(String.format("motor%s.txt", MOTORS.size() - 1)));
+        FILES.add(new File(String.format("/home/lvuser/motor%s.txt", MOTORS.size() - 1)));
         return MOTORS.size() - 1;
     }
 
@@ -59,9 +59,14 @@ public class Motors {
             // writes the correct speed at the correct time
             for (int i = 0; i < SPEEDS.size(); i++) {
                 try{
-                    FileWriter fileWriter = new FileWriter(FILES.get(i));
-                    FILES.get(i).setWritable(true);
-                    if (FILES.get(i).createNewFile()){
+                    File file = FILES.get(i);
+                    file.setWritable(true, false);
+                    file.setReadable(true, false);
+                
+                    FileWriter fileWriter = new FileWriter(file);
+                    
+                    
+                    if (file.createNewFile()){
                         for (int j = 0; j < m_iterations; j++) {
                             fileWriter.append("0.0\n");
                         }

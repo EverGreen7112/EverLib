@@ -8,6 +8,10 @@ public class MotorGroup extends MotorControllerGroup {
         super(new Motor(motorController), TurnToMotors(motorControllers));
     }
 
+    public MotorGroup(MotorController motorController) {
+        super(new Motor(motorController));
+    }
+
 
     private static Motor[] TurnToMotors(MotorController[] motorControllers){
         Motor[] motors = new Motor[motorControllers.length];
