@@ -23,13 +23,31 @@ public class Motors {
     private static boolean m_record = false;
 
     // adds a new motor to the group
-    public static int AddMotor(MotorController motor){
+    public static int AddMotor(MotorController motor, int port){
         MOTORS.add(motor);
         SPEEDS.add(0.0);
-        FILES.add(new File(String.format("/home/lvuser/motor%s.txt", MOTORS.size() - 1)));
+        File file = new File(String.format("/home/lvuser/motor%s.txt", MOTORS.size() - 1));
+        FILES.add(file);
+        if (m_record){
+            
+            try{
+                FileWriter fileWriter = new FileWriter(file);
+                fileWriter.write(String.format("%s\n%s", port, motor.getClass()));
+                if (file.createNewFile()){
+                    for (int j = 0; j < m_iterations; j++) {
+                        fileWriter.append("0.0\n");
+                    }
+                }
+                fileWriter.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
         return MOTORS.size() - 1;
     }
 
+    
     // sets the speed of a motor in a specified index
     public static void setSpeed(int index, double speed) {
         SPEEDS.set(index, speed);
@@ -44,7 +62,6 @@ public class Motors {
     public static void recordMotor(){
         if (m_record){
             m_iterations++; // registers the new iteration
-
             // registers the new iteration to the settings file
             try {
                 SETTINGS_FILE.createNewFile();
@@ -66,11 +83,7 @@ public class Motors {
                     FileWriter fileWriter = new FileWriter(file);
                     
                     
-                    if (file.createNewFile()){
-                        for (int j = 0; j < m_iterations; j++) {
-                            fileWriter.append("0.0\n");
-                        }
-                    }
+                    
                     fileWriter.append(SPEEDS.get(i).toString());
                     fileWriter.close();
                 }
@@ -84,19 +97,7 @@ public class Motors {
     // plays a recording of the motors
     public static void playRecordedAction(){
         try{
-            Scanner settings = new Scanner(SETTINGS_FILE);
-            m_iterations = settings.nextInt();
-            int motorsToSet = settings.nextInt();
-            settings.close();
-            double[][] speeds = new double[motorsToSet][m_iterations];
-
-            for (int i = 0; i < m_iterations; i++) {
-                for (int j = 0; j < motorsToSet; j++) {
-                    Scanner scanner = new Scanner(FILES.get(j));
-                    speeds[j][i] = scanner.nextDouble();
-                    scanner.close();
-                }
-            }
+            double[][] speeds = getRecordingAsDoubleArray();
 
             for (double[] ds : speeds) {
                 for (int i = 0; i < ds.length; i++) {
@@ -116,9 +117,64 @@ public class Motors {
         }
     }
 
+    // returns the recorded actions as doubles
+    public static double[][] getRecordingAsDoubleArray() {
+        setMotorsForPlay();
+        try {
+            
+            Scanner settings = new Scanner(SETTINGS_FILE);
+            m_iterations = settings.nextInt();
+            int motorsToSet = settings.nextInt();
+            settings.close();
+            double[][] speeds = new double[motorsToSet][m_iterations];
+
+            for (int i = 0; i < m_iterations; i++) {
+                for (int j = 0; j < motorsToSet; j++) {
+                    FILES.set(j, new File(String.format("/home/lvuser/motor%s.txt", j)));
+                    FILES.get(j).setReadable(true);
+                    
+                    Scanner scanner = new Scanner(FILES.get(j));
+                    if (i == 0){
+                        scanner.next();
+                        scanner.next();
+                    }
+                    speeds[j][i] = scanner.nextDouble();
+                }
+            } 
+            return speeds;
+        } 
+        catch (Exception e) {
+            e.printStackTrace();
+            return new double[][] {{0}};
+        }
+
+    }
+
+    // sets the motors for playing a recording
+    private static void setMotorsForPlay() {
+        try {
+            Scanner settings = new Scanner(SETTINGS_FILE);
+            m_iterations = settings.nextInt();
+            int motorsToSet = settings.nextInt();
+            settings.close();
+            MOTORS.clear();
+            
+            for (int i = 0; i < motorsToSet; i++) {
+                Scanner scanner = new Scanner(new File(String.format("/home/lvuser/motor%s.txt", i)));
+                int port = scanner.nextInt();
+                String type = scanner.nextLine();
+                AddMotor((MotorController)Class.forName(type).getDeclaredConstructor().newInstance(port), port);
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     // sets wether or to record
     public static void setRecord(boolean record){
         m_record = record;
+        
     }
 
     // runs the motors
