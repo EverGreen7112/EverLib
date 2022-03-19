@@ -9,15 +9,12 @@ public class Motor<T extends MotorController> implements MotorController{
     private final int m_INDEX;
     private final int M_PORT;
 
-    public Motor(int port){
-        MotorController motor;
+    public Motor(int port, T motor){
         this.M_PORT = port;
         int index = -1;
-        try {
-            motor = this.getClass().getDeclaredConstructor().newInstance(port);
+        try { 
             index = Motors.AddMotor(motor, this.M_PORT);
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-                | NoSuchMethodException | SecurityException e) {
+        } catch (Exception e) {
 
             e.printStackTrace();
             

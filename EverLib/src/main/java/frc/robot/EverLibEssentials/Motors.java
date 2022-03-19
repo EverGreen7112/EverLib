@@ -52,6 +52,14 @@ public class Motors {
     public static void setSpeed(int index, double speed) {
         SPEEDS.set(index, speed);
     }
+
+    // deletes the recording
+    public static void deleteRecordingsByOrder(int recordings){
+        for (int i = 0; i <= recordings; i++) {
+            File file = new File(String.format("/home/lvuser/motor%s.txt", i));
+            file.delete();
+        }
+    }
     
     // gets the speed of a motor in a specified index
     public static double getSpeedAt(int index) { 
